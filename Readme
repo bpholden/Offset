@@ -1,0 +1,33 @@
+Basic outline of what is in this directory
+
+WCS - class that reads the apfgwcs keywords and creates an object that
+has those values for mapping RA/Dec to position on the guider and back,
+has methods for doing the mapping
+
+Pos - class that provides an object that is the position components of
+scriptobs line, maps between R.A. and Dec. and pixel position on the
+guider assuming a WCS object - NOT USED
+
+Star - class that maps a starlist line into an object, duplication w/
+Pos
+
+Slitbox - class that maps slitbox status into an object, can update
+keywords in appropriate services, can effectively replace autoslitbox
+- threaded
+
+XPA - class that handles some XPA tasks needed to replicate autoslitbox
+
+GuidePos - class for updating the guide position for a Star object not
+on the slit center - threaded - controlled via setting an object
+
+guide_pos - guides on a position - DOES NOT WORK
+
+offset_guide - reads in a starlist of pairs, an offset guide star and
+a target star, acquires offset star, then moves to target, and guides
+assuming that target star is in slit, DOES NOT TAKE A SPECTRUM
+
+offset_blind - performs blind offsets from an acquisition star, much
+more like scritobs in functionality - NEEDS TO BE RENAMED
+
+
+

@@ -1,0 +1,277 @@
+#! /opt/kroot/bin/kpython
+from __future__ import print_function
+import os
+import sys
+import re
+import time
+import atexit
+import signal
+import subprocess
+import argparse
+
+try:
+    import ktl
+    import APFTask
+    from apflog import apflog
+    havektl = True
+except:
+    print('Cannot import ktl')
+    havektl = False
+    
+import numpy as np
+
+from Offset import Pos
+from Offset import WCS
+from Offset import Star
+from Offset import GuidePos
+import Exposure
+import Spectrometer
+from KeywordHandle import readem, readit, writeem
+
+
+
+
+###
+origowner = ''
+success = False
+def shutdown():
+    if success == True:
+        status = 'Exited/Success'
+    else:
+        status = 'Exited/Failure'
+
+    try:
+        ktl.write('apfschedule','ownrhint',origowner)
+    except:
+        pass
+        
+    try:
+        APFTask.set(parent, 'STATUS', status)
+    except:
+        print ('Exited/Failure')
+        
+    return
+
+def parseArgs():
+
+
+    parser = argparse.ArgumentParser(description="Set default options")
+    parser.add_argument('-t', '--test', action='store_true', help="Starts in test mode. No modification to telescope, instrument, or observer settings will be made.")
+
+    return opt
+    
+def focusTel(observe):
+    autofoc = ktl.read('apftask','SCRIPTOBS_AUTOFOC',timeout=2)
+    if observe.star.foc > 0 or observe.autofoc == "robot_autofocus_enable":
+        APFTask.phase(parent,"Check/Measure_focus")
+        if observe.star.foc < 2:
+            r, code = CmdExec.operExec('focus_telescope',observe.checkapf)
+        else:
+            r, code = CmdExec.operExec('focus_telescope --force',observe.checkapf)
+        if r is False:
+            return r
+    r, code = CmdExec.operExec('centerwait',observe.checkapf)
+    return r
+
+
+if __name__ == "__main__":
+
+
+    opts = parseArgs()
+    if opts.test:
+        parent='example'
+    else:
+        parent = 'scriptobs'
+
+    atexit.register(shutdown)
+    signal.signal(signal.SIGINT,  shutdown)
+    signal.signal(signal.SIGTERM, shutdown)
+    
+        
+    try:
+        apflog("Attempting to establish apftask as %s" % parent)
+        APFTask.establish(parent, os.getpid())
+    except Exception as e:
+        apflog("Cannot establish as %s: %s." % (parent,e), echo=True)
+        sys.exit("Couldn't establish APFTask %s" % parent)
+    
+    APFTask.phase(parent,"Reading star list and arguments")
+
+    observe = Observe.Observe(parent=parent,fake=opt.test)
+    origowner = observe.origowner
+    guidepos = GuidePos.GuidePos()
+    
+    APFTask.step(parent,0)
+
+    APFTask.set(parent,'line_result',0)
+    ndone = 0
+    gstar = None
+    guidepos.start()
+    
+    r, code = CmdExec.operExec("prep-obs",observe.checkapf)
+    with sys.stdin as txt:
+        for line in txt:
+            observe.star = Star.Star(starlist_line=line.strip())
+            
+            ndone = ndone + 1
+            APFTask.set(parent,"lines_done",ndone)
+            APFTask.step(parent,ndone)
+            APFTask.set(parent,suffix='LINE',value=observe.star.line)	
+            
+            if observe.star.blank is False and gstar is None:
+                # this is not a blank field
+                APFTask.phase(parent,"Acquiring star %s" % (observe.star.name))
+
+                observe.setupGuider()
+                observe.setupOffsets()
+                observe.mode.write('off')
+                APFTask.set(parent,'VMAG',observe.star.vmag)
+
+                APFTask.phase(parent,"Configuring instrument")
+                observe.configureSpecDefault()
+                rv = observe.configureDeckerI2()
+                observe.updateRoboState()
+
+                APFTask.phase(parent,"Windshielding")
+                APFTask.set(parent,'windshield','Disable')
+            
+                observe.setupStar()
+                windstr = 'windshield.csh %.1f 0 0 0' % (observe.star.tottime)
+                r, code = CmdExec.operExec(windstr,observe.checkapf)
+                if r is False:
+                    if observe.star.blank:
+                        acquire_success = False
+                    APFTask.set(parent,'line_result','ERR/WINDSHIELD')
+                    continue
+
+                rv = observe.spectrom.check_states(keylist=['DECKERNAM','IODINENAM'])
+                if rv is False:
+                    observe.log("Instrument move failed",level='error',echo=True)
+                    if observe.star.blank:
+                        acquire_success = False
+                    APFTask.set(parent,'line_result','ERR/SPECTROMETER')
+                    continue
+            
+                if observe.star.do:
+                    r, code = observe.acquirePointingRef()
+                    if r is False:
+                        # one can always hope
+                        observe.log("Pointing star acquisition failed, continuing", level='error', echo=True)
+                        
+                    observe.setupGuider()
+                # slew to star - centerup and autoexposure
+
+                slewstr = 'slew --targname %s -r %s -d %s --pm-ra-arc %s --pm-dec-arc %s' % (observe.star.name,observe.star.sra, observe.star.sdec, observe.star.pmra, observe.star.pmdec)
+                if observe.fake:
+                    observe.log("Would have executed %s" % (slewstr),echo=True)
+                else:
+                    CmdExec.operExec(slewstr,observe.checkapf)
+
+                # set the ADC to tracking
+                observe.spectrom.adctrack()
+                # waitfor ?
+            
+                APFTask.phase(parent,"Autoexposure")
+                if observe.fake:
+                    observe.log("Would have executed %s" % ('autoexposure'),echo=True)
+                    r=True
+                else:
+                    r, code = CmdExec.operExec('autoexposure',observe.checkapf)
+                
+                if r is False:
+                    APFTask.set(parent,'line_result','Failed')
+                    if observe.star.blank:
+                        acquire_success = False
+                    continue
+            
+                APFTask.phase(parent,"Centering")
+                r, code = CmdExec.operExec('centerup',observe.checkapf)
+                if r is False:
+                    if observe.star.blank:
+                        acquire_success = False
+                    APFTask.set(parent,'line_result','Failed')
+                    continue
+
+                if observe.gexptime.read(binary=True) <= 1.0:
+                    r = focusTel(observe)
+                    if r is False:
+                        APFTask.set(parent,'line_result','Failed')
+                        if observe.star.blank:
+                            acquire_success = False
+                        continue
+                    
+                observe.mode.write('guide')
+
+                if observe.star.blank:
+                    acquire_success= True
+                APFTask.set(parent,'message','Acquired')
+                    
+                if observe.star.guide:
+                    gstar = Star.Star(starlist_line=observe.star.line)
+                elif observe.star.blank is False and observe.star.guide is False:
+                    gstar = None
+                    if observe.star.count > 0:
+                        observe.takeExposures()
+                    
+                APFTask.set(parent,'line_result','Success')
+
+            elif gstar is not None and observe.star.blank is False:
+                # do not reset guider, already at correct exposure for current guide star
+                # do not zero out offset values
+                mode.write('off')
+
+                if observe.star.offset is True:
+                    writeem(eostele,'ntraoff',observe.star.raoff)
+                    writeem(eostele,'ntdecoff',observe.star.decoff)
+                    # waitfor Tracking
+                    # watifor Slewing
+                else:
+                    slewstr = 'slew --targname %s -r %s -d %s --pm-ra-arc %s --pm-dec-arc %s' % (observe.star.name,observe.star.sra, observe.star.sdec, observe.star.pmra, observe.star.pmdec)
+                    CmdExec.operExec(slewstr,observe.checkapf)
+                # set the ADC to tracking
+                spectra.adctrack()
+
+                guidepos.star = gstar
+
+                apfguide['MAXRADIUS'].write(30,binary=True)
+                mode.write('guide')
+                
+                if observe.star.count > 0:
+                    if observe.takeExposures():
+                        APFTask.set(parent,'line_result','Success')
+                    mode.write('Off')
+                    gstar = None
+                    guidepos.star = None
+                    
+                
+            elif observe.star.blank is True:
+                if gstar is not None:
+                    gstar = None
+                if acquire_success is False:
+                    continue
+                # skip blanks after an unsuccessful acquisition
+                
+                observe.mode.write('off')
+                specstr = 'modify -s eostele targname="%s"' % (observe.star.name)
+                CmdExec.operExec(specstr,observe.checkapf)
+
+                APFTask.phase(parent,"Slewing to blank field")
+
+                if observe.star.offset is True:
+                    writeem(eostele,'ntraoff',observe.star.raoff)
+                    writeem(eostele,'ntdecoff',observe.star.decoff)
+                    # waitfor Tracking
+                    # watifor Slewing
+                else:
+                    slewstr = 'slew --targname %s -r %s -d %s --pm-ra-arc %s --pm-dec-arc %s' % (observe.star.name,observe.star.sra, observe.star.sdec, observe.star.pmra, observe.star.pmdec)
+                    CmdExec.operExec(slewstr,observe.checkapf)
+                # set the ADC to tracking
+
+                observe.takeExposures()
+            
+                observe.updateRoboState()
+            APFTask.set(parent,'line_result','Success')
+
+            
+success = True
+sys.exit('Done')
