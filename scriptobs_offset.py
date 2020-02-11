@@ -41,16 +41,44 @@ def shutdown():
         status = 'Exited/Failure'
 
     try:
-        ktl.write('apfschedule','ownrhint',origowner)
+        ktl.write('apfschedule','ownrhint',origowner,timeout=0)
     except:
         pass
-        
+
+
+    try:
+        ktl.write('apfguide','maxradius',256,timeout=0)
+    except:
+        pass
+
+    try:
+        if ktl.read('checkapf','instr_perm',binary=True) and ktl.read('checkapf','instrele',binary=True) == 1:
+            ktl.write('apfmot','adcmod','Track',timeout=0)
+    except:
+        pass
+
+    try:
+        if ktl.read('apfucam','Event',binary=True,timeout=0) <= 2:
+            ktl.write('apfucam','stop',True,timeout=0)
+    except:
+        pass
+    
     try:
         APFTask.set(parent, 'STATUS', status)
     except:
         print ('Exited/Failure')
         
     return
+
+def signalShutdown(signal,frame):
+
+    open_ok = ktl.read('checkapf','open_ok',timeout=0)
+    move_perm = ktl.read('checkapf','move_perm',timeout=0)
+    instr_perm = ktl.read('checkapf','instr_perm',timeout=0)
+    apflog("OPEN_OK= %s  MOVE_PERM= %s INSTR_PERM= %s" \
+               %(open_ok,move_perm,instr_perm), echo=True)
+
+    shutdown()
 
 def parseArgs():
 
@@ -84,8 +112,8 @@ if __name__ == "__main__":
         parent = 'scriptobs'
 
     atexit.register(shutdown)
-    signal.signal(signal.SIGINT,  shutdown)
-    signal.signal(signal.SIGTERM, shutdown)
+    signal.signal(signal.SIGINT,  signalShutdown)
+    signal.signal(signal.SIGTERM, signalShutdown)
     
         
     try:
