@@ -94,12 +94,12 @@ def focusTel(observe):
     if observe.star.foc > 0 or observe.autofoc == "robot_autofocus_enable":
         APFTask.phase(parent,"Check/Measure_focus")
         if observe.star.foc < 2:
-            r, code = CmdExec.operExec('focus_telescope',observe.checkapf)
+            r, code = CmdExec.operExec('focus_telescope',observe.checkapf,fake=observe.fake)
         else:
-            r, code = CmdExec.operExec('focus_telescope --force',observe.checkapf)
+            r, code = CmdExec.operExec('focus_telescope --force',observe.checkapf,fake=observe.fake)
         if r is False:
             return r
-    r, code = CmdExec.operExec('centerwait',observe.checkapf)
+    r, code = CmdExec.operExec('centerwait',observe.checkapf,fake=observe.fake)
     return r
 
 
@@ -137,7 +137,7 @@ if __name__ == "__main__":
     gstar = None
     guidepos.start()
     
-    r, code = CmdExec.operExec("prep-obs",observe.checkapf)
+    r, code = CmdExec.operExec("prep-obs",observe.checkapf,fake=observe.fake)
     with sys.stdin as txt:
         for line in txt:
             observe.star = Star.Star(starlist_line=line.strip())
