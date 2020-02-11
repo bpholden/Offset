@@ -11,6 +11,7 @@ import numpy as np
 
 import Pos
 import WCS 
+from CmdExec import cmdexec
 
 def shutdown():
     try:
@@ -59,26 +60,6 @@ def read_starlist(filename):
 
     return gpos, tpos
     
-def cmdexec(cmd, debug=False, cwd='./'):
-    args = ["apftask","do"]
-    args = args + cmd.split()
-    apflog("Executing Command: %s" % repr(cmd), echo=True)
-    
-    p = subprocess.Popen(args, stdout=subprocess.PIPE,stderr=subprocess.PIPE,cwd=cwd)
-    
-    while p.poll() is None:
-        l = p.stdout.readline().rstrip('\n')
-        if debug: apflog(l, echo=debug)
-
-    out, err = p.communicate()
-    if debug: apflog(out, echo=debug)
-    if len(err): apflog(err, echo=debug)
-    ret_code = p.returncode
-    if ret_code == 0:
-        return True, ret_code
-    else:
-        return False, ret_code
-
     
 def parse_args(argv):
     if len(argv) < 4:
@@ -110,7 +91,7 @@ if __name__ == "__main__":
 
     # first slew to gpos - centerup and autoexposure
     specstr = 'modify -s eostele targname="%s" targra="%s" targdec="%s" targmuar="%s"  targmuad="%s"  targplax="0.0" targtype="RA/DEC"' % (gpos.name, gpos.sra, gpos.sdec, gpos.pmra, gpos.pmdec)
-    r,code=cmdexec(specstr)
+    r,code = cmdexec(specstr)
     if r is False:
         print("Cannot execute modify!")
         sys.exit()
