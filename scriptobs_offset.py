@@ -26,6 +26,7 @@ from Offset import Star
 from Offset import GuidePos
 import Exposure
 import Spectrometer
+import CmdExec
 from KeywordHandle import readem, readit, writeem
 
 
