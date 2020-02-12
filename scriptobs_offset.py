@@ -292,21 +292,25 @@ if __name__ == "__main__":
                 if acquire_success is False:
                     continue
                 # skip blanks after an unsuccessful acquisition
-                
-                observe.mode.write('off')
-                specstr = 'modify -s eostele targname="%s"' % (observe.star.name)
-                CmdExec.operExec(specstr,observe.checkapf)
 
-                APFTask.phase(parent,"Slewing to blank field")
+                if observe.fake is False:
+                    observe.mode.write('off')
+                specstr = 'modify -s eostele targname="%s"' % (observe.star.name)
+                CmdExec.operExec(specstr,observe.checkapf,fake=observe.fake)
 
                 if observe.star.offset is True:
-                    writeem(eostele,'ntraoff',observe.star.raoff)
-                    writeem(eostele,'ntdecoff',observe.star.decoff)
+                    
+                    if observe.fake:
+                        apflog('eostele.NTRAOFF =%.3f eostele.NTDECOFF = %.3f' % (observe.star.raoff,observe.star.decoff),echo=True)
+                    else:
+                        writeem(eostele,'ntraoff',observe.star.raoff)
+                        writeem(eostele,'ntdecoff',observe.star.decoff)
+                        APFTask.phase(parent,"Slewing to blank field")
                     # waitfor Tracking
                     # watifor Slewing
                 else:
                     slewstr = 'slew --targname %s -r %s -d %s --pm-ra-arc %s --pm-dec-arc %s' % (observe.star.name,observe.star.sra, observe.star.sdec, observe.star.pmra, observe.star.pmdec)
-                    CmdExec.operExec(slewstr,observe.checkapf)
+                    CmdExec.operExec(slewstr,observe.checkapf,fake=observe.fake)
                 # set the ADC to tracking
 
                 observe.takeExposures()
