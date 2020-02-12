@@ -166,7 +166,7 @@ if __name__ == "__main__":
             
                 observe.setupStar()
                 windstr = 'windshield.csh %.1f 0 0 0' % (observe.star.tottime)
-                r, code = CmdExec.operExec(windstr,observe.checkapf)
+                r, code = CmdExec.operExec(windstr,observe.checkapf,fake=observe.fake)
                 if r is False:
                     if observe.star.blank:
                         acquire_success = False
@@ -194,7 +194,7 @@ if __name__ == "__main__":
                 if observe.fake:
                     observe.log("Would have executed %s" % (slewstr),echo=True)
                 else:
-                    CmdExec.operExec(slewstr,observe.checkapf)
+                    CmdExec.operExec(slewstr,observe.checkapf,fake=observe.fake)
 
                 # set the ADC to tracking
                 observe.spectrom.adctrack()
@@ -205,7 +205,7 @@ if __name__ == "__main__":
                     observe.log("Would have executed %s" % ('autoexposure'),echo=True)
                     r=True
                 else:
-                    r, code = CmdExec.operExec('autoexposure',observe.checkapf)
+                    r, code = CmdExec.operExec('autoexposure',observe.checkapf,fake=observe.fake)
                 
                 if r is False:
                     APFTask.set(parent,'line_result','Failed')
@@ -214,7 +214,7 @@ if __name__ == "__main__":
                     continue
             
                 APFTask.phase(parent,"Centering")
-                r, code = CmdExec.operExec('centerup',observe.checkapf)
+                r, code = CmdExec.operExec('centerup',observe.checkapf,fake=observe.fake)
                 if r is False:
                     if observe.star.blank:
                         acquire_success = False
@@ -228,8 +228,11 @@ if __name__ == "__main__":
                         if observe.star.blank:
                             acquire_success = False
                         continue
-                    
-                observe.mode.write('guide')
+
+                if observe.fake:
+                    pass
+                else:
+                    observe.mode.write('guide')
 
                 if observe.star.blank:
                     acquire_success= True
@@ -239,7 +242,7 @@ if __name__ == "__main__":
                     gstar = Star.Star(starlist_line=observe.star.line)
                 elif observe.star.blank is False and observe.star.guide is False:
                     gstar = None
-                    if observe.star.count > 0:
+                    if observe.star.count > 0 and observe.fake is False:
                         observe.takeExposures()
                     
                 APFTask.set(parent,'line_result','Success')
@@ -247,16 +250,17 @@ if __name__ == "__main__":
             elif gstar is not None and observe.star.blank is False:
                 # do not reset guider, already at correct exposure for current guide star
                 # do not zero out offset values
-                mode.write('off')
+                if observe.fake is False:
+                    mode.write('off')
 
-                if observe.star.offset is True:
+                if observe.star.offset is True and observe.fake is False::
                     writeem(eostele,'ntraoff',observe.star.raoff)
                     writeem(eostele,'ntdecoff',observe.star.decoff)
                     # waitfor Tracking
                     # watifor Slewing
                 else:
                     slewstr = 'slew --targname %s -r %s -d %s --pm-ra-arc %s --pm-dec-arc %s' % (observe.star.name,observe.star.sra, observe.star.sdec, observe.star.pmra, observe.star.pmdec)
-                    CmdExec.operExec(slewstr,observe.checkapf)
+                    CmdExec.operExec(slewstr,observe.checkapf,fake=observe.fake)
                 # set the ADC to tracking
                 spectra.adctrack()
 
