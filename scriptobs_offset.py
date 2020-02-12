@@ -230,7 +230,7 @@ if __name__ == "__main__":
                         continue
 
                 if observe.fake:
-                    pass
+                    continue
                 else:
                     observe.mode.write('guide')
 
@@ -253,9 +253,12 @@ if __name__ == "__main__":
                 if observe.fake is False:
                     mode.write('off')
 
-                if observe.star.offset is True and observe.fake is False::
-                    writeem(eostele,'ntraoff',observe.star.raoff)
-                    writeem(eostele,'ntdecoff',observe.star.decoff)
+                if observe.star.offset is True:
+                    if observe.fake:
+                        apflog('eostele.NTRAOFF =%.3f eostele.NTDECOFF = %.3f' % (observe.star.raoff,observe.star.decoff))
+                    else:
+                        writeem(eostele,'ntraoff',observe.star.raoff)
+                        writeem(eostele,'ntdecoff',observe.star.decoff)
                     # waitfor Tracking
                     # watifor Slewing
                 else:
@@ -265,14 +268,20 @@ if __name__ == "__main__":
                 spectra.adctrack()
 
                 guidepos.star = gstar
-
-                apfguide['MAXRADIUS'].write(30,binary=True)
-                mode.write('guide')
+                guiderad = 30
+                if observe.fake:
+                    apflog("Would have started guiding with a %f pixel radius" %(guiderad))
+                else:
+                    apfguide['MAXRADIUS'].write(guiderad,binary=True)
+                    mode.write('guide')
                 
                 if observe.star.count > 0:
-                    if observe.takeExposures():
-                        APFTask.set(parent,'line_result','Success')
-                    mode.write('Off')
+                    if observe.fake:
+                        apflog("Would have taken %d exposures" % (observe.star.count))
+                    else:
+                        if observe.takeExposures():
+                            APFTask.set(parent,'line_result','Success')
+                        mode.write('Off')
                     gstar = None
                     guidepos.star = None
                     
