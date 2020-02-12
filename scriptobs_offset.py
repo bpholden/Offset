@@ -118,7 +118,7 @@ if __name__ == "__main__":
     
         
     try:
-        apflog("Attempting to establish apftask as %s" % parent)
+        apflog("Attempting to establish apftask as %s" % parent,echo=True)
         APFTask.establish(parent, os.getpid())
     except Exception as e:
         apflog("Cannot establish as %s: %s." % (parent,e), echo=True)
@@ -255,7 +255,7 @@ if __name__ == "__main__":
 
                 if observe.star.offset is True:
                     if observe.fake:
-                        apflog('eostele.NTRAOFF =%.3f eostele.NTDECOFF = %.3f' % (observe.star.raoff,observe.star.decoff))
+                        apflog('eostele.NTRAOFF =%.3f eostele.NTDECOFF = %.3f' % (observe.star.raoff,observe.star.decoff),echo=True)
                     else:
                         writeem(eostele,'ntraoff',observe.star.raoff)
                         writeem(eostele,'ntdecoff',observe.star.decoff)
@@ -270,14 +270,14 @@ if __name__ == "__main__":
                 guidepos.star = gstar
                 guiderad = 30
                 if observe.fake:
-                    apflog("Would have started guiding with a %f pixel radius" %(guiderad))
+                    apflog("Would have started guiding with a %f pixel radius" %(guiderad),echo=True)
                 else:
                     apfguide['MAXRADIUS'].write(guiderad,binary=True)
                     mode.write('guide')
                 
                 if observe.star.count > 0:
                     if observe.fake:
-                        apflog("Would have taken %d exposures" % (observe.star.count))
+                        apflog("Would have taken %d exposures" % (observe.star.count),echo=True)
                     else:
                         if observe.takeExposures():
                             APFTask.set(parent,'line_result','Success')
