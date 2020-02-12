@@ -87,10 +87,13 @@ class Observe:
             self.log("Cannot communicate with APFTask", level='error',echo=True)
         
     def updateRoboState(self):
-        try:
-            self.checkapf['ROBOSTATE'].write('%s operating' % (self.parent),wait=True,timeout=20)
-        except:
-            self.log("Cannot update robostate!!!",level='error')
+        if self.fake:
+            self.log("would have updated robostate", echo=True)
+        else:        
+            try:
+                self.checkapf['ROBOSTATE'].write('%s operating' % (self.parent),wait=True,timeout=20)
+            except:
+                self.log("Cannot update robostate!!!",level='error')
             
     # Callback for Deadman timer
     def dmtimeMon(self,dmtime):
@@ -180,12 +183,16 @@ class Observe:
     
     def takeExposures():
 
+        if self.fake:
+            self.log("Would have setup exposure meter and written owner name, checked the UCAM and taken some data",echo=True)
+            return True
+        
         self.updateRoboState()
         spectraexp = Exposure.Exposure(self.star.texp,self.star.name,count=self.star.count,parent=self.parent,fake=self.fake)
         if self.blank and self.star.texp > 600:
             self.log("An exposure time of %d is greater than the recommended 600 secs for a blank field" % (self.star.texp))
             self.message("An exposure time of %d is greater than the recommended 600 secs for a blank field" % (self.star.texp))
-            
+
         self.ownrhint.write(self.star.owner)
         if self.blank:
             ktl.write('apfguide','xpose_enable','false')
