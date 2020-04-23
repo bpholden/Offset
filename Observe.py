@@ -69,7 +69,7 @@ class Observe:
 
 
     def __repr__(self):
-        return "<Observe %s %s >"
+        return "<Observe %s %s >" % (self.parent,self.fake)
 
     def log(self, msg, level='Notice', echo=True):
         """Wraps the APF.log function. Messages are logged as current parent.
@@ -87,6 +87,8 @@ class Observe:
             self.log("Cannot communicate with APFTask", level='error',echo=True)
         
     def updateRoboState(self):
+        if self.fake:
+            return
         try:
             self.checkapf['ROBOSTATE'].write('%s operating' % (self.parent),wait=True,timeout=20)
         except:
@@ -172,6 +174,8 @@ class Observe:
             self.log("would have run slewlock on star " + pstar, echo=True)
             return True, 0
         
+        if self.fake:
+            return
         instr = '/usr/local/lick/bin/robot/slewlock reference %s %f %f %f %f 210' % (pstar.name,pstar.ra,pstar.dec,pstar.pmra,pstar.pmdec)
         r, code = CmdExec.operExec(instr,checkapf)
         return r, code
@@ -180,6 +184,8 @@ class Observe:
     
     def takeExposures():
 
+        if self.fake:
+            return
         self.updateRoboState()
         spectraexp = Exposure.Exposure(self.star.texp,self.star.name,count=self.star.count,parent=self.parent,fake=self.fake)
         if self.blank and self.star.texp > 600:
@@ -221,6 +227,8 @@ class Observe:
 
     def configureSpecDefault(self):
         
+        if self.fake:
+            return
         self.spectrom.read()
         self.spectrom.enable()
         self.spectrom.state['HALOGEN2'] = 'Off'
@@ -234,6 +242,8 @@ class Observe:
     def configureDeckerI2(self,wait=False):
         self.updateRoboState()
         APFTask.set(self.parent,suffix='MESSAGE',value='Moving I2 cell')	
+        if self.fake:
+            return
             
         if self.star.I2 == "Y" or self.star.I2 == "y":
             rv = self.spectrom.iodine(wait=False)
