@@ -26,6 +26,7 @@ from Offset import Star
 from Offset import GuidePos
 import Exposure
 import Spectrometer
+import CmdExec
 from KeywordHandle import readem, readit, writeem
 
 
@@ -93,12 +94,12 @@ def focusTel(observe):
     if observe.star.foc > 0 or observe.autofoc == "robot_autofocus_enable":
         APFTask.phase(parent,"Check/Measure_focus")
         if observe.star.foc < 2:
-            r, code = CmdExec.operExec('focus_telescope',observe.checkapf)
+            r, code = CmdExec.operExec('focus_telescope',observe.checkapf,fake=observe.fake)
         else:
-            r, code = CmdExec.operExec('focus_telescope --force',observe.checkapf)
+            r, code = CmdExec.operExec('focus_telescope --force',observe.checkapf,fake=observe.fake)
         if r is False:
             return r
-    r, code = CmdExec.operExec('centerwait',observe.checkapf)
+    r, code = CmdExec.operExec('centerwait',observe.checkapf,fake=observe.fake)
     return r
 
 
@@ -117,7 +118,7 @@ if __name__ == "__main__":
     
         
     try:
-        apflog("Attempting to establish apftask as %s" % parent)
+        apflog("Attempting to establish apftask as %s" % parent,echo=True)
         APFTask.establish(parent, os.getpid())
     except Exception as e:
         apflog("Cannot establish as %s: %s." % (parent,e), echo=True)
@@ -136,7 +137,7 @@ if __name__ == "__main__":
     gstar = None
     guidepos.start()
     
-    r, code = CmdExec.operExec("prep-obs",observe.checkapf)
+    r, code = CmdExec.operExec("prep-obs",observe.checkapf,fake=observe.fake)
     with sys.stdin as txt:
         for line in txt:
             observe.star = Star.Star(starlist_line=line.strip())
@@ -165,7 +166,7 @@ if __name__ == "__main__":
             
                 observe.setupStar()
                 windstr = 'windshield.csh %.1f 0 0 0' % (observe.star.tottime)
-                r, code = CmdExec.operExec(windstr,observe.checkapf)
+                r, code = CmdExec.operExec(windstr,observe.checkapf,fake=observe.fake)
                 if r is False:
                     if observe.star.blank:
                         acquire_success = False
@@ -193,7 +194,7 @@ if __name__ == "__main__":
                 if observe.fake:
                     observe.log("Would have executed %s" % (slewstr),echo=True)
                 else:
-                    CmdExec.operExec(slewstr,observe.checkapf)
+                    CmdExec.operExec(slewstr,observe.checkapf,fake=observe.fake)
 
                 # set the ADC to tracking
                 observe.spectrom.adctrack()
@@ -204,7 +205,7 @@ if __name__ == "__main__":
                     observe.log("Would have executed %s" % ('autoexposure'),echo=True)
                     r=True
                 else:
-                    r, code = CmdExec.operExec('autoexposure',observe.checkapf)
+                    r, code = CmdExec.operExec('autoexposure',observe.checkapf,fake=observe.fake)
                 
                 if r is False:
                     APFTask.set(parent,'line_result','Failed')
@@ -213,7 +214,7 @@ if __name__ == "__main__":
                     continue
             
                 APFTask.phase(parent,"Centering")
-                r, code = CmdExec.operExec('centerup',observe.checkapf)
+                r, code = CmdExec.operExec('centerup',observe.checkapf,fake=observe.fake)
                 if r is False:
                     if observe.star.blank:
                         acquire_success = False
@@ -227,8 +228,11 @@ if __name__ == "__main__":
                         if observe.star.blank:
                             acquire_success = False
                         continue
-                    
-                observe.mode.write('guide')
+
+                if observe.fake:
+                    continue
+                else:
+                    observe.mode.write('guide')
 
                 if observe.star.blank:
                     acquire_success= True
@@ -238,7 +242,7 @@ if __name__ == "__main__":
                     gstar = Star.Star(starlist_line=observe.star.line)
                 elif observe.star.blank is False and observe.star.guide is False:
                     gstar = None
-                    if observe.star.count > 0:
+                    if observe.star.count > 0 and observe.fake is False:
                         observe.takeExposures()
                     
                 APFTask.set(parent,'line_result','Success')
@@ -246,28 +250,38 @@ if __name__ == "__main__":
             elif gstar is not None and observe.star.blank is False:
                 # do not reset guider, already at correct exposure for current guide star
                 # do not zero out offset values
-                mode.write('off')
+                if observe.fake is False:
+                    mode.write('off')
 
                 if observe.star.offset is True:
-                    writeem(eostele,'ntraoff',observe.star.raoff)
-                    writeem(eostele,'ntdecoff',observe.star.decoff)
+                    if observe.fake:
+                        apflog('eostele.NTRAOFF =%.3f eostele.NTDECOFF = %.3f' % (observe.star.raoff,observe.star.decoff),echo=True)
+                    else:
+                        writeem(eostele,'ntraoff',observe.star.raoff)
+                        writeem(eostele,'ntdecoff',observe.star.decoff)
                     # waitfor Tracking
                     # watifor Slewing
                 else:
                     slewstr = 'slew --targname %s -r %s -d %s --pm-ra-arc %s --pm-dec-arc %s' % (observe.star.name,observe.star.sra, observe.star.sdec, observe.star.pmra, observe.star.pmdec)
-                    CmdExec.operExec(slewstr,observe.checkapf)
+                    CmdExec.operExec(slewstr,observe.checkapf,fake=observe.fake)
                 # set the ADC to tracking
                 spectra.adctrack()
 
                 guidepos.star = gstar
-
-                apfguide['MAXRADIUS'].write(30,binary=True)
-                mode.write('guide')
+                guiderad = 30
+                if observe.fake:
+                    apflog("Would have started guiding with a %f pixel radius" %(guiderad),echo=True)
+                else:
+                    apfguide['MAXRADIUS'].write(guiderad,binary=True)
+                    mode.write('guide')
                 
                 if observe.star.count > 0:
-                    if observe.takeExposures():
-                        APFTask.set(parent,'line_result','Success')
-                    mode.write('Off')
+                    if observe.fake:
+                        apflog("Would have taken %d exposures" % (observe.star.count),echo=True)
+                    else:
+                        if observe.takeExposures():
+                            APFTask.set(parent,'line_result','Success')
+                        mode.write('Off')
                     gstar = None
                     guidepos.star = None
                     
@@ -278,21 +292,25 @@ if __name__ == "__main__":
                 if acquire_success is False:
                     continue
                 # skip blanks after an unsuccessful acquisition
-                
-                observe.mode.write('off')
-                specstr = 'modify -s eostele targname="%s"' % (observe.star.name)
-                CmdExec.operExec(specstr,observe.checkapf)
 
-                APFTask.phase(parent,"Slewing to blank field")
+                if observe.fake is False:
+                    observe.mode.write('off')
+                specstr = 'modify -s eostele targname="%s"' % (observe.star.name)
+                CmdExec.operExec(specstr,observe.checkapf,fake=observe.fake)
 
                 if observe.star.offset is True:
-                    writeem(eostele,'ntraoff',observe.star.raoff)
-                    writeem(eostele,'ntdecoff',observe.star.decoff)
+                    
+                    if observe.fake:
+                        apflog('eostele.NTRAOFF =%.3f eostele.NTDECOFF = %.3f' % (observe.star.raoff,observe.star.decoff),echo=True)
+                    else:
+                        writeem(eostele,'ntraoff',observe.star.raoff)
+                        writeem(eostele,'ntdecoff',observe.star.decoff)
+                        APFTask.phase(parent,"Slewing to blank field")
                     # waitfor Tracking
                     # watifor Slewing
                 else:
                     slewstr = 'slew --targname %s -r %s -d %s --pm-ra-arc %s --pm-dec-arc %s' % (observe.star.name,observe.star.sra, observe.star.sdec, observe.star.pmra, observe.star.pmdec)
-                    CmdExec.operExec(slewstr,observe.checkapf)
+                    CmdExec.operExec(slewstr,observe.checkapf,fake=observe.fake)
                 # set the ADC to tracking
 
                 observe.takeExposures()

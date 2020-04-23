@@ -8,7 +8,7 @@ import WCS
 import Star
 
 class GuidePos(threading.Thread):
-    def __init__(self,parent='slitbox'):
+    def __init__(self):
         threading.Thread.__init__(self)
         self.setDaemon(True)
 
