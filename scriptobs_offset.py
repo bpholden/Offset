@@ -266,7 +266,7 @@ if __name__ == "__main__":
                 else:
                     gstar = None
                     
-                if observe.star.count > 0 and observe.fake is False:
+                if observe.star.count > 0:
                     observe.takeExposures()
 
                 observe.updateRoboState()
