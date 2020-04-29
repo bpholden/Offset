@@ -332,8 +332,8 @@ if __name__ == "__main__":
                     guidepos.star = None
             
                 observe.updateRoboState()
-                
-                APFTask.set(parent,'line_result','Success')
+                if observe.fake is False:
+                    APFTask.set(parent,'line_result','Success')
 
             
 success = True
