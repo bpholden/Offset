@@ -151,6 +151,7 @@ if __name__ == "__main__":
     APFTask.set(parent,'line_result',0)
     ndone = 0
     gstar = None
+    acquire_success = False
     guidepos.start()
     
     r, code = CmdExec.operExec("prep-obs",observe.checkapf,fake=observe.fake)
@@ -166,6 +167,7 @@ if __name__ == "__main__":
             if observe.star.blank is False and gstar is None:
                 # this is not a blank field - there is a star to be observed
                 APFTask.phase(parent,"Acquiring star %s" % (observe.star.name))
+                acquire_success= False
 
                 observe.setupGuider() # sets guider values to default
                 observe.setupOffsets() # zero out Az/El offsets
@@ -184,8 +186,6 @@ if __name__ == "__main__":
                 windstr = 'windshield.csh %.1f 0 0 0' % (observe.star.tottime)
                 r, code = CmdExec.operExec(windstr,observe.checkapf,fake=observe.fake)
                 if r is False:
-                    if observe.star.blank:
-                        acquire_success = False
                     APFTask.set(parent,'line_result','ERR/WINDSHIELD')
                     continue
 
@@ -194,8 +194,6 @@ if __name__ == "__main__":
                 rv = observe.spectrom.check_states(keylist=['DECKERNAM','IODINENAM'])
                 if rv is False:
                     observe.log("Instrument move failed",level='error',echo=True)
-                    if observe.star.blank:
-                        acquire_success = False
                     APFTask.set(parent,'line_result','ERR/SPECTROMETER')
                     continue
             
@@ -227,15 +225,11 @@ if __name__ == "__main__":
                 
                 if r is False:
                     APFTask.set(parent,'line_result','Failed')
-                    if observe.star.blank:
-                        acquire_success = False
-                    continue
+w                    continue
             
                 APFTask.phase(parent,"Centering")
                 r, code = CmdExec.operExec('centerup',observe.checkapf,fake=observe.fake)
                 if r is False:
-                    if observe.star.blank:
-                        acquire_success = False
                     APFTask.set(parent,'line_result','Failed')
                     continue
 
@@ -243,8 +237,6 @@ if __name__ == "__main__":
                     r = focusTel(observe)
                     if r is False:
                         APFTask.set(parent,'line_result','Failed')
-                        if observe.star.blank:
-                            acquire_success = False
                         continue
 
                 if observe.fake:
@@ -252,19 +244,19 @@ if __name__ == "__main__":
                 else:
                     observe.mode.write('guide')
 
-                if observe.star.blank:
-                    acquire_success= True
+ 
+                acquire_success= True
                 APFTask.set(parent,'message','Acquired')
                 
                 observe.updateRoboState()
                 
                 if observe.star.guide:
                     gstar = Star(starlist_line=observe.star.line)
-                elif observe.star.blank is False and observe.star.guide is False:
+                else:
                     gstar = None
-                    if observe.star.count > 0 and observe.fake is False:
-                        
-                        observe.takeExposures()
+                    
+                if observe.star.count > 0 and observe.fake is False:
+                    observe.takeExposures()
 
                 observe.updateRoboState()
                 APFTask.set(parent,'line_result','Success')
