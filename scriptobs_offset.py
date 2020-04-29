@@ -252,9 +252,7 @@ if __name__ == "__main__":
                         APFTask.set(parent,'line_result','Failed')
                         continue
 
-                if observe.fake:
-                    continue
-                else:
+                if observe.fake is False:
                     observe.mode.write('guide')
 
  
@@ -272,7 +270,8 @@ if __name__ == "__main__":
                     observe.takeExposures()
 
                 observe.updateRoboState()
-                APFTask.set(parent,'line_result','Success')
+                if observe.fake is False:
+                    APFTask.set(parent,'line_result','Success')
 
             elif gstar is not None or observe.star.blank:
                 # do not reset guider, already at correct exposure for current guide star
