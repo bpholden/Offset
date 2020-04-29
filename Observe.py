@@ -210,7 +210,7 @@ class Observe:
     
     def acquirePointingRef(self):
 
-        pstar = self.findNearbyStar(self.star)
+        pstar = self.findNearbyStar()
 
         if pstar is None:
             return False, -1
