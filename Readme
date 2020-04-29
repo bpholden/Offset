@@ -29,6 +29,6 @@ assuming that target star is in slit, DOES NOT TAKE A SPECTRUM
 offset_blind - performs blind offsets from an acquisition star, much
 more like scriptobs in functionality 
 
-scriptobs_offset - performs scriptobs functionality (takes a star list from stdin) and runs through the list, also will make blind offsets or will guide on a guide star offset from the target
+scriptobs_offset - merger of above, does scriptobs like funcationality 
 
 
