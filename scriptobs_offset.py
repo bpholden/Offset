@@ -116,10 +116,10 @@ if __name__ == "__main__":
         parent = 'scriptobs'
 
     if opt.file:
-        if os.path.exists(opt.file)
+        if os.path.exists(opt.file):
             fp = open(opt.file)
         else:
-            print("File %s does not exist" % (opt.file)
+            print("File %s does not exist" % (opt.file))
             sys.exit()
     else:
         fp = sys.stdin
