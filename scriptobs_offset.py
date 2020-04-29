@@ -88,6 +88,7 @@ def parseArgs():
 
     parser = argparse.ArgumentParser(description="Set default options")
     parser.add_argument('-t', '--test', action='store_true', help="Starts in test mode. No modification to telescope, instrument, or observer settings will be made.")
+    parser.add_argument('-f', '--file', default=None, help="Starts in test mode. No modification to telescope, instrument, or observer settings will be made.")
     opt = parser.parse_args()
     return opt
     
@@ -114,6 +115,15 @@ if __name__ == "__main__":
     else:
         parent = 'scriptobs'
 
+    if opt.file:
+        if os.path.exists(opt.file)
+            fp = open(opt.file)
+        else:
+            print("File %s does not exist" % (opt.file)
+            sys.exit()
+    else:
+        fp = sys.stdin
+        
     # basic signal handling
     # should exit on most 
         
@@ -155,7 +165,7 @@ if __name__ == "__main__":
     guidepos.start()
     
     r, code = CmdExec.operExec("prep-obs",observe.checkapf,fake=observe.fake)
-    with sys.stdin as txt:
+    with fp as txt:
         for line in txt:
             observe.star = Star(starlist_line=line.strip())
             
