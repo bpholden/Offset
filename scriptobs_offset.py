@@ -333,7 +333,7 @@ if __name__ == "__main__":
             
                 observe.updateRoboState()
                 
-            APFTask.set(parent,'line_result','Success')
+                APFTask.set(parent,'line_result','Success')
 
             
 success = True
