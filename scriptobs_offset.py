@@ -225,7 +225,7 @@ if __name__ == "__main__":
                 
                 if r is False:
                     APFTask.set(parent,'line_result','Failed')
-w                    continue
+                    continue
             
                 APFTask.phase(parent,"Centering")
                 r, code = CmdExec.operExec('centerup',observe.checkapf,fake=observe.fake)
