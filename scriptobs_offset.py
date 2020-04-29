@@ -147,8 +147,8 @@ if __name__ == "__main__":
     guidepos = GuidePos()
     
     APFTask.step(parent,0)
-
-    APFTask.set(parent,'line_result',0)
+    if observe.fake is False:
+        APFTask.set(parent,'line_result',0)
     ndone = 0
     gstar = None
     acquire_success = False
@@ -160,9 +160,10 @@ if __name__ == "__main__":
             observe.star = Star(starlist_line=line.strip())
             
             ndone = ndone + 1
-            APFTask.set(parent,"lines_done",ndone)
-            APFTask.step(parent,ndone)
-            APFTask.set(parent,suffix='LINE',value=observe.star.line)	
+            if observe.fake is False:
+                APFTask.set(parent,"lines_done",ndone)
+                APFTask.step(parent,ndone)
+                APFTask.set(parent,suffix='LINE',value=observe.star.line)	
             
             if observe.star.blank is False and gstar is None:
                 # this is not a blank field - there is a star to be observed
@@ -171,8 +172,9 @@ if __name__ == "__main__":
 
                 observe.setupGuider() # sets guider values to default
                 observe.setupOffsets() # zero out Az/El offsets
-                observe.mode.write('off') # stop guiding for acquisition
-                APFTask.set(parent,'VMAG',observe.star.vmag) # for autoexposure
+                if observe.fake is False:
+                    observe.mode.write('off') # stop guiding for acquisition
+                    APFTask.set(parent,'VMAG',observe.star.vmag) # for autoexposure
 
                 APFTask.phase(parent,"Configuring instrument")
                 observe.configureSpecDefault()
@@ -180,7 +182,8 @@ if __name__ == "__main__":
                 observe.updateRoboState() # this is hitting the deadman switch
 
                 APFTask.phase(parent,"Windshielding")
-                APFTask.set(parent,'windshield','Disable')
+                if observe.fake is False:
+                    APFTask.set(parent,'windshield','Disable')
             
                 observe.setupStar() # just configures eostele for windshield for slew
                 windstr = 'windshield.csh %.1f 0 0 0' % (observe.star.tottime)
