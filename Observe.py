@@ -215,14 +215,14 @@ class Observe:
         if pstar is None:
             return False, -1
 
-        if self.fake:
-            self.log("would have run slewlock on star " + pstar, echo=True)
-            return True, 0
-        
-        if self.fake:
-            return
         instr = '/usr/local/lick/bin/robot/slewlock reference %s %f %f %f %f 210' % (pstar.name,pstar.ra,pstar.dec,pstar.pmra,pstar.pmdec)
-        r, code = CmdExec.operExec(instr,self.checkapf)
+        if self.fake:
+            self.log("Would have run %s" % (instr), echo=True)
+            r = True
+            code= 0
+        else:
+            r, code = CmdExec.operExec(instr,self.checkapf)
+            
         return r, code
 
 
