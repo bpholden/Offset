@@ -265,7 +265,7 @@ if __name__ == "__main__":
                 # do not reset guider, already at correct exposure for current guide star
                 # do not zero out offset values
                 if observe.fake is False:
-                    mode.write('off')
+                    observe.mode.write('off')
                 if acquire_success is False:
                     continue
 
@@ -285,7 +285,7 @@ if __name__ == "__main__":
                         writeem(eostele,'ntraoff',observe.star.raoff)
                         writeem(eostele,'ntdecoff',observe.star.decoff)
                         expression = "$eostele.AZSSTATE == Tracking && $eostele.ELSSTATE == Tracking"
-                        rv = APFTask.waitfor(parent,True,expression=expression,timeout=300):            
+                        rv = APFTask.waitfor(parent,True,expression=expression,timeout=300)            
                         if rv is False:
                             APFTask.set(parent,'line_result','Failure')
                             continue
@@ -305,7 +305,7 @@ if __name__ == "__main__":
                         apflog("Would have started guiding with a %f pixel radius" %(guiderad),echo=True)
                     else:
                         apfguide['MAXRADIUS'].write(guiderad,binary=True)
-                        mode.write('guide')
+                        observe.mode.write('guide')
                         
                 observe.updateRoboState()
 
@@ -315,7 +315,7 @@ if __name__ == "__main__":
                     else:
                         if observe.takeExposures():
                             APFTask.set(parent,'line_result','Success')
-                        mode.write('Off')
+                        observe.mode.write('Off')
                     gstar = None
                     guidepos.star = None
             
