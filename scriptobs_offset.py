@@ -152,7 +152,7 @@ if __name__ == "__main__":
     
     observe = Observe(parent=parent,fake=opt.test)
     origowner = observe.origowner
-    observe.record='no'
+    observe.record='yes'
     
     guidepos = GuidePos()
     
