@@ -138,9 +138,15 @@ class Observe:
         Writes guider values to standard defaults, 
         1 second epxosure, 1 frame, and medium gain.
         """
-        
-        self.gexptime.write(1,binary=True)
-        self.sumframe.write(1,binary=True)
+
+        self.maxradius.write(210,binary=True)
+        if self.gexptime.read(binary=True) < 1:
+            self.gexptime.write(1,binary=True)
+            self.sumframe.write(1,binary=True)
+        else:
+            self.sumframe.write(1,binary=True)
+            self.gexptime.write(1,binary=True)
+
         self.gain.write(2,binary=True)                
 
     def setupOffsets(self):
