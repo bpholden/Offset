@@ -1,6 +1,9 @@
 import subprocess
 
-import apflog
+from apflog import apflog
+
+from KeywordHandle import readem, readit, writeem
+
 
 def cmdexec(cmd, cwd='./',fake=False,debug=False):
     args = ["apftask","do"]
