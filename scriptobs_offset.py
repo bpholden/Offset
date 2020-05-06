@@ -316,7 +316,7 @@ if __name__ == "__main__":
                     if observe.fake:
                         apflog("Would have started guiding with a %f pixel radius" %(guiderad),echo=True)
                     else:
-                        apfguide['MAXRADIUS'].write(guiderad,binary=True)
+                        observe.maxradius.write(guiderad,binary=True)
                         observe.mode.write('guide')
                         
                 observe.updateRoboState()
