@@ -18,14 +18,12 @@ except:
     print('Cannot import ktl')
     havektl = False
     
-import numpy as np
-
 from Offset import Pos
 from Offset import WCS
 from Offset import Star
 from Offset import GuidePos
 from Offset import Observe
-import CmdExec
+
 import Exposure
 import Spectrometer
 import CmdExec
