@@ -271,7 +271,7 @@ if __name__ == "__main__":
                 if observe.fake is False:
                     APFTask.set(parent,'line_result','Success')
 
-            elif gstar is not None or observe.star.blank:
+            elif gstar is not None or observe.star.blank or observe.star.offset:
                 # do not reset guider, already at correct exposure for current guide star
                 # do not zero out offset values
                 if observe.fake is False:
