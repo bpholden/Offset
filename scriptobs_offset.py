@@ -305,8 +305,7 @@ if __name__ == "__main__":
                 observe.spectrom.adctrack()
 
                 if observe.star.blank:
-                    if gstar is not None:
-                        gstar = None
+                    gstar = None
                 else:
                     guidepos.star = gstar
                     guiderad = 30
