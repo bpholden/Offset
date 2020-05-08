@@ -174,7 +174,7 @@ class Star:
 
 
             
-        self.tottime = (self.texp) * self.count  + 100 
+        self.tottime = (self.texp) * self.count  + 300 
         if self.count > 1:
             self.tottime += 40*(self.count - 1)
         if self.blank is True:
