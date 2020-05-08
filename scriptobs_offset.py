@@ -263,9 +263,8 @@ if __name__ == "__main__":
                     gstar = Star(starlist_line=observe.star.line)
                 else:
                     gstar = None
-                    
-                if observe.star.count > 0:
-                    observe.takeExposures()
+                    if observe.star.count > 0 :
+                        observe.takeExposures()
 
                 observe.updateRoboState()
                 if observe.fake is False:
