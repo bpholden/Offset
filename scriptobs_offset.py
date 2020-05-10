@@ -278,8 +278,7 @@ if __name__ == "__main__":
                 if acquire_success is False:
                     continue
 
-                specstr = 'modify -s eostele targname="%s"' % (observe.star.name)
-                CmdExec.operExec(specstr,observe.checkapf)
+                writeem(observe.eostele,'targname',observe.star.name)
                     
                 if observe.star.blank:
                     APFTask.phase(parent,"Moving to blank field")
@@ -291,8 +290,8 @@ if __name__ == "__main__":
                     if observe.fake:
                         apflog('eostele.NTRAOFF =%.3f eostele.NTDECOFF = %.3f' % (observe.star.raoff,observe.star.decoff),echo=True)
                     else:
-                        writeem(eostele,'ntraoff',observe.star.raoff)
-                        writeem(eostele,'ntdecoff',observe.star.decoff)
+                        writeem(observe.eostele,'ntraoff',observe.star.raoff)
+                        writeem(observe.eostele,'ntdecoff',observe.star.decoff)
                         expression = "$eostele.AZSSTATE == Tracking && $eostele.ELSSTATE == Tracking"
                         rv = APFTask.waitfor(parent,True,expression=expression,timeout=300)            
                         if rv is False:
