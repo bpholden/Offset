@@ -159,7 +159,7 @@ class Star:
         if 'decoff' in fields_dict.keys():
             self.decoff = float_or_default(fields_dict['decoff'],None)
             
-        if self.guide and self.decoff is not None and self.raoff is not None:
+        if self.decoff is not None and self.raoff is not None:
             self.offset = True
             
         if 'blank' in fields_dict.keys():
