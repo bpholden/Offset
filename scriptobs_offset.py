@@ -292,6 +292,7 @@ if __name__ == "__main__":
                     else:
                         writeem(observe.eostele,'ntraoff',observe.star.raoff)
                         writeem(observe.eostele,'ntdecoff',observe.star.decoff)
+                        writeem(observe.eostele,'ntoffset',True)
                         expression = "$eostele.AZSSTATE == Tracking && $eostele.ELSSTATE == Tracking"
                         rv = APFTask.waitfor(parent,True,expression=expression,timeout=300)            
                         if rv is False:
