@@ -218,6 +218,7 @@ if __name__ == "__main__":
                     APFTask.set(parent,'line_result','ERR/SPECTROMETER')
                     continue
 
+                # find a star in the pointing star list
                 if observe.star.do:
                     r, code = observe.acquirePointingRef()
                     if r is False:

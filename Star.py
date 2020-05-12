@@ -12,7 +12,7 @@ def checkflag(value,regexp,default):
             return default
     except:
         return default
-    
+
 def int_or_default(value,default=0):
     try:
         attr = int(value)
@@ -41,7 +41,7 @@ class Star:
 
         self.raoff = None
         self.decoff = None
-        
+
         self.I2 = "N"
         self.vmag = -10
         self.do = False
@@ -55,7 +55,7 @@ class Star:
         self.uth='00'
         self.utm='00'
         self.block=''
-        
+
         self.blank=False
         self.guide=False
         self.offset=False
@@ -74,7 +74,7 @@ class Star:
         rv += "%s %s %s %s %s "  % (  self.I2, self.owner, str(self.blank), str(self.guide), str(self.do))
         rv += "%.1f %d %.1f %d %s>" % (self.texp, self.count, self.tottime, self.foc, self.decker)
         return rv
-        
+
 
     def parse(self, starlist_line=None):
         if starlist_line:
@@ -104,7 +104,7 @@ class Star:
                 self.dec += float(fields[5])/60. + float(fields[6])/3600.
         except:
             self.dec = -100.0
-        
+
         # fields[7] is meaningless
         fields_dict = dict()
         for i in range(8,len(fields)):
@@ -120,13 +120,13 @@ class Star:
         if 'vmag' in fields_dict.keys():
             self.vmag = float_or_default(fields_dict['vmag'],20.)
 
-            
+
         if 'count' in fields_dict.keys():
             self.count = int_or_default(fields_dict['count'])
 
         if 'foc' in fields_dict.keys():
             self.foc = int_or_default(fields_dict['foc'])
-            
+
         if 'I2' in fields_dict.keys():
             self.I2 = checkflag(fields_dict['I2'],"\A(y|Y|n|N)","N")
         if 'decker' in fields_dict.keys():
@@ -152,40 +152,33 @@ class Star:
                 self.guide = True
             else:
                 self.guide = False
-                
+
 
         if 'raoff' in fields_dict.keys():
             self.raoff = float_or_default(fields_dict['raoff'],None)
         if 'decoff' in fields_dict.keys():
             self.decoff = float_or_default(fields_dict['decoff'],None)
-            
+
         if self.decoff is not None and self.raoff is not None:
             self.offset = True
-            
+
         if 'blank' in fields_dict.keys():
             flag =  checkflag(fields_dict['blank'],"\A(y|Y|n|N)","N")
             if flag == 'Y' or flag == 'y':
                 self.blank = True
             else:
                 self.blank = False
-                
-        if self.blank and self.decoff is not None and self.raoff is not None:
-            self.offset = True
 
-
-            
-        self.tottime = (self.texp) * self.count  + 300 
+        self.tottime = (self.texp) * self.count  + 300
         if self.count > 1:
             self.tottime += 40*(self.count - 1)
-        if self.blank is True:
-            self.tottime = 3600.
 
         return
 
 
 
 if __name__ == "__main__":
-    
+
     line="HR223 00 48 50.2 +50 58 5.4 2000 pmra=30.84 pmdec=-10.02 vmag=4.901 texp=900 I2=Y lamp=none uth=2 utm=43 expcount=1e+09 decker=W do= count=2 foc=2 owner=public # end"
     star = Star(starlist_line=line)
     print(star)
@@ -196,18 +189,18 @@ if __name__ == "__main__":
     star = Star(starlist_line=line)
     print(star)
 
-    
+
     import FakeWCS
 
     wcs = FakeWCS.WCS()
-    
-    wcs.crval1 = star.ra 
-    wcs.crval2 = star.dec 
+
+    wcs.crval1 = star.ra
+    wcs.crval2 = star.dec
 
     x,y = wcs.s2p(star.ra,star.dec)
     print(x,y)
     print(wcs.p2s(x,y))
-              
+
     wcs.crval1 = star.ra + star.raoff/3600.
     wcs.crval2 = star.dec + star.decoff/3600.
 
