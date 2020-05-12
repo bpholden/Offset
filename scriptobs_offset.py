@@ -96,10 +96,10 @@ def focusTel(observe):
     autofoc = ktl.read('apftask','SCRIPTOBS_AUTOFOC',timeout=2)
     if observe.star.foc > 0 or autofoc == "robot_autofocus_enable":
         APFTask.phase(parent,"Check/Measure_focus")
-        if observe.star.foc < 2:
-            r, code = CmdExec.operExec('focus_telescope',observe.checkapf,fake=observe.fake)
-        else:
+        if observe.star.foc == 2:
             r, code = CmdExec.operExec('focus_telescope --force',observe.checkapf,fake=observe.fake)
+        else:
+            r, code = CmdExec.operExec('focus_telescope ',observe.checkapf,fake=observe.fake)
         if r is False:
             return r
     r, code = CmdExec.operExec('centerwait',observe.checkapf,fake=observe.fake)
