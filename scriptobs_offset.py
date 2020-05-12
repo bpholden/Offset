@@ -17,7 +17,7 @@ try:
 except:
     print('Cannot import ktl')
     havektl = False
-    
+
 from Offset import Pos
 from Offset import WCS
 from Offset import Star
@@ -63,12 +63,12 @@ def shutdown():
             ktl.write('apfucam','stop',True,timeout=0)
     except:
         pass
-    
+
     try:
         APFTask.set(parent, 'STATUS', status)
     except:
         print ('Exited/Failure')
-        
+
     return
 
 def signalShutdown(signal,frame):
@@ -87,9 +87,10 @@ def parseArgs():
     parser = argparse.ArgumentParser(description="Set default options")
     parser.add_argument('-t', '--test', action='store_true', help="Starts in test mode. No modification to telescope, instrument, or observer settings will be made.")
     parser.add_argument('-f', '--file', default=None, help="Starts in test mode. No modification to telescope, instrument, or observer settings will be made.")
+    parser.add_argument('-t', '--tdir', default='.', help="Output directory for target list")
     opt = parser.parse_args()
     return opt
-    
+
 def focusTel(observe):
     autofoc = ktl.read('apftask','SCRIPTOBS_AUTOFOC',timeout=2)
     if observe.star.foc > 0 or autofoc == "robot_autofocus_enable":
@@ -121,23 +122,32 @@ if __name__ == "__main__":
             sys.exit()
     else:
         fp = sys.stdin
-        
+
+    obs_fp = None
+    if os.path.exists(opt.tdir):
+        obs_fn = os.path.join(opt.tdir,'observed_targets')
+        try:
+            obs_fp = open(obs_fn,"w+")
+        except:
+            print("Cannot open %s" % (obs_fn))
+
+
     # basic signal handling
-    # should exit on most 
-        
+    # should exit on most
+
     atexit.register(shutdown)
     signal.signal(signal.SIGINT,  signalShutdown)
     signal.signal(signal.SIGTERM, signalShutdown)
 
     # task setup
-            
+
     try:
         apflog("Attempting to establish apftask as %s" % parent,echo=True)
         APFTask.establish(parent, os.getpid())
     except Exception as e:
         apflog("Cannot establish as %s: %s." % (parent,e), echo=True)
         sys.exit("Couldn't establish APFTask %s" % parent)
-    
+
     APFTask.phase(parent,"Reading star list and arguments")
 
     # These are the two objects that important
@@ -147,13 +157,13 @@ if __name__ == "__main__":
     #
     # GuidePos is the guider position and can be set to a guide
     # star on the slit or off
-    
+
     observe = Observe(parent=parent,fake=opt.test)
     origowner = observe.origowner
     observe.record='yes'
-    
+
     guidepos = GuidePos()
-    
+
     APFTask.step(parent,0)
     if observe.fake is False:
         APFTask.set(parent,'line_result',0)
@@ -161,18 +171,18 @@ if __name__ == "__main__":
     gstar = None
     acquire_success = False
     guidepos.start()
-    
+
     r, code = CmdExec.operExec("prep-obs",observe.checkapf,fake=observe.fake)
     with fp as txt:
         for line in txt:
             observe.star = Star(starlist_line=line.strip())
-            
+
             ndone = ndone + 1
             if observe.fake is False:
                 APFTask.set(parent,"lines_done",ndone)
                 APFTask.step(parent,ndone)
-                APFTask.set(parent,suffix='LINE',value=observe.star.line)	
-            
+                APFTask.set(parent,suffix='LINE',value=observe.star.line)
+
             if observe.star.blank is False and gstar is None:
                 # this is not a blank field - there is a star to be observed
                 APFTask.phase(parent,"Acquiring star %s" % (observe.star.name))
@@ -192,7 +202,7 @@ if __name__ == "__main__":
                 APFTask.phase(parent,"Windshielding")
                 if observe.fake is False:
                     APFTask.set(parent,'windshield','Disable')
-            
+
                 observe.setupStar() # just configures eostele for windshield for slew
                 windstr = 'windshield.csh %.1f 0 0 0' % (observe.star.tottime)
                 r, code = CmdExec.operExec(windstr,observe.checkapf,fake=observe.fake)
@@ -207,13 +217,13 @@ if __name__ == "__main__":
                     observe.log("Instrument move failed",level='error',echo=True)
                     APFTask.set(parent,'line_result','ERR/SPECTROMETER')
                     continue
-            
+
                 if observe.star.do:
                     r, code = observe.acquirePointingRef()
                     if r is False:
                         # one can always hope
                         observe.log("Pointing star acquisition failed, continuing", level='error', echo=True)
-                        
+
                     observe.setupGuider()
                 # slew to star - centerup and autoexposure
 
@@ -226,18 +236,18 @@ if __name__ == "__main__":
                 # set the ADC to tracking
                 observe.spectrom.adctrack()
                 # waitfor ?
-            
+
                 APFTask.phase(parent,"Autoexposure")
                 if observe.fake:
                     observe.log("Would have executed %s" % ('autoexposure'),echo=True)
                     r=True
                 else:
                     r, code = CmdExec.operExec('autoexposure',observe.checkapf,fake=observe.fake)
-                
+
                 if r is False:
                     APFTask.set(parent,'line_result','Failed')
                     continue
-            
+
                 APFTask.phase(parent,"Centering")
                 r, code = CmdExec.operExec('centerup',observe.checkapf,fake=observe.fake)
                 if r is False:
@@ -253,12 +263,12 @@ if __name__ == "__main__":
                 if observe.fake is False:
                     observe.mode.write('guide')
 
- 
+
                 acquire_success= True
                 APFTask.set(parent,'message','Acquired')
-                
+
                 observe.updateRoboState()
-                
+
                 if observe.star.guide:
                     gstar = Star(starlist_line=observe.star.line)
                 else:
@@ -268,6 +278,8 @@ if __name__ == "__main__":
 
                 observe.updateRoboState()
                 if observe.fake is False:
+                    if obs_fp is not None:
+                        obs_fp.write(observe.star.line + "\n")
                     APFTask.set(parent,'line_result','Success')
 
             elif gstar is not None or observe.star.blank:
@@ -279,13 +291,13 @@ if __name__ == "__main__":
                     continue
 
                 writeem(observe.eostele,'targname',observe.star.name)
-                    
+
                 if observe.star.blank:
                     APFTask.phase(parent,"Moving to blank field")
                     # skip blanks after an unsuccessful acquisition
                 else:
                     APFTask.phase(parent,"Moving to target star from guide star")
-                    
+
                 if observe.star.offset is True:
                     if observe.fake:
                         apflog('eostele.NTRAOFF =%.3f eostele.NTDECOFF = %.3f' % (observe.star.raoff,observe.star.decoff),echo=True)
@@ -294,7 +306,7 @@ if __name__ == "__main__":
                         writeem(observe.eostele,'ntdecoff',observe.star.decoff)
                         writeem(observe.eostele,'ntoffset',True)
                         expression = "$eostele.AZSSTATE == Tracking && $eostele.ELSSTATE == Tracking"
-                        rv = APFTask.waitfor(parent,True,expression=expression,timeout=300)            
+                        rv = APFTask.waitfor(parent,True,expression=expression,timeout=300)
                         if rv is False:
                             APFTask.set(parent,'line_result','Failure')
                             continue
@@ -314,7 +326,7 @@ if __name__ == "__main__":
                     else:
                         observe.maxradius.write(guiderad,binary=True)
                         observe.mode.write('guide')
-                        
+
                 observe.updateRoboState()
 
                 if observe.star.count > 0:
@@ -323,14 +335,17 @@ if __name__ == "__main__":
                     else:
                         if observe.takeExposures():
                             APFTask.set(parent,'line_result','Success')
+                            if obs_fp is not None:
+                                obs_fp.write(observe.star.line + "\n")
                         observe.mode.write('Off')
                     gstar = None
                     guidepos.star = None
-            
+
                 observe.updateRoboState()
                 if observe.fake is False:
                     APFTask.set(parent,'line_result','Success')
 
-            
-success = True
-sys.exit('Done')
+    if obs_fp is not None:
+        obs_fp.close()
+    success = True
+    sys.exit('Done')
