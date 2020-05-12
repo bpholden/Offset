@@ -189,9 +189,10 @@ if __name__ == "__main__":
                 APFTask.phase(parent,"Acquiring star %s" % (observe.star.name))
                 acquire_success= False
 
-                observe.setupGuider() # sets guider values to default
-                observe.setupOffsets() # zero out Az/El offsets
                 if observe.fake is False:
+                    observe.setupGuider() # sets guider values to default
+                    observe.setupOffsets() # zero out Az/El offsets
+                    observe.setupRDOffsets(0.0,0.0) # zero out RA/Dec offsets
                     observe.mode.write('off') # stop guiding for acquisition
                     APFTask.set(parent,'VMAG',observe.star.vmag) # for autoexposure
 
