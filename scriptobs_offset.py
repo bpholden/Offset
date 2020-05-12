@@ -92,6 +92,7 @@ def parseArgs():
     return opt
 
 def focusTel(observe):
+    r = False
     autofoc = ktl.read('apftask','SCRIPTOBS_AUTOFOC',timeout=2)
     if observe.star.foc > 0 or autofoc == "robot_autofocus_enable":
         APFTask.phase(parent,"Check/Measure_focus")
