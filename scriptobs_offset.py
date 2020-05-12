@@ -179,9 +179,9 @@ if __name__ == "__main__":
             observe.star = Star(starlist_line=line.strip())
 
             ndone = ndone + 1
+            APFTask.step(parent,ndone)
             if observe.fake is False:
                 APFTask.set(parent,"lines_done",ndone)
-                APFTask.step(parent,ndone)
                 APFTask.set(parent,suffix='LINE',value=observe.star.line)
 
             if observe.star.blank is False and gstar is None:
