@@ -157,8 +157,6 @@ class Observe:
         """
         writeem(self.eostele,'ntazoff',self.zps["AZZPT"])
         writeem(self.eostele,'nteloff',self.zps["ELZPT"])
-        writeem(self.eostele,'ntdecoff',0.0)
-        writeem(self.eostele,'ntraoff',0.0)
 
     def setupRDOffsets(self,raoff,decoff):
         """
