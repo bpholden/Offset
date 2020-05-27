@@ -288,10 +288,11 @@ if __name__ == "__main__":
             elif gstar is not None or observe.star.blank:
                 # do not reset guider, already at correct exposure for current guide star
                 # do not zero out offset values
-                if observe.fake is False:
-                    observe.mode.write('off')
                 if acquire_success is False:
                     continue
+                if observe.fake is False:
+                    observe.mode.write('off')
+
 
                 writeem(observe.eostele,'targname',observe.star.name)
 
@@ -307,7 +308,7 @@ if __name__ == "__main__":
                     else:
                         writeem(observe.eostele,'ntraoff',observe.star.raoff)
                         writeem(observe.eostele,'ntdecoff',observe.star.decoff)
-                        writeem(observe.eostele,'ntoffset',True)
+                        writeem(observe.eostele,'ntoffset',1)
                         expression = "$eostele.AZSSTATE == Tracking && $eostele.ELSSTATE == Tracking"
                         rv = APFTask.waitfor(parent,True,expression=expression,timeout=300)
                         if rv is False:
