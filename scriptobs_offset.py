@@ -206,7 +206,7 @@ if __name__ == "__main__":
 
                 initialize(observe)
 
-                APFTask.phase(parent,"Configuring instrument")
+                APFTask.phase(parent,"Config_start")
                 observe.configureSpecDefault()
                 rv = observe.configureDeckerI2(wait=False)
                 observe.updateRoboState() # this is hitting the deadman switch
@@ -310,10 +310,15 @@ if __name__ == "__main__":
                 writeem(observe.eostele,'targname',observe.star.name)
 
                 if observe.star.blank:
-                    APFTask.phase(parent,"Moving to blank field")
+                    APFTask.phase(parent,"Blank_field")
                     # skip blanks after an unsuccessful acquisition
                 else:
-                    APFTask.phase(parent,"Moving to target star from guide star")
+                    APFTask.phase(parent,"New_acquire")
+
+                APFTask.phase(parent,"Config_start")
+                observe.configureSpecDefault()
+                rv = observe.configureDeckerI2(wait=False)
+                observe.updateRoboState() # this is hitting the deadman switch
 
                 if observe.star.offset is True:
                     if observe.fake:
