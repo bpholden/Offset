@@ -102,8 +102,18 @@ def focusTel(observe):
             r, code = CmdExec.operExec('focus_telescope ',observe.checkapf,fake=observe.fake)
         if r is False:
             return r
+    APFTask.phase(parent,"Focus_re-center")
     r, code = CmdExec.operExec('centerwait',observe.checkapf,fake=observe.fake)
     return r
+
+def initialize(observe):
+    if observe.fake:
+        return
+    observe.setupGuider() # sets guider values to default
+    observe.setupOffsets() # zero out Az/El offsets
+    observe.setupRDOffsets(0.0,0.0) # zero out RA/Dec offsets
+    observe.mode.write('off') # stop guiding for acquisition
+    APFTask.set(parent,'VMAG',observe.star.vmag) # for autoexposure
 
 
 if __name__ == "__main__":
@@ -149,7 +159,7 @@ if __name__ == "__main__":
         apflog("Cannot establish as %s: %s." % (parent,e), echo=True)
         sys.exit("Couldn't establish APFTask %s" % parent)
 
-    APFTask.phase(parent,"Reading star list and arguments")
+    APFTask.phase(parent,"Initializing")
 
     # These are the two objects that important
     # Observe handles a lot of details of observing, and points
@@ -173,11 +183,15 @@ if __name__ == "__main__":
     acquire_success = False
     guidepos.start()
 
+    APFTask.phase(parent,"prep-obs")
     r, code = CmdExec.operExec("prep-obs",observe.checkapf,fake=observe.fake)
+    APFTask.phase(parent,"Input")
     with fp as txt:
         for line in txt:
-            observe.star = Star(starlist_line=line.strip())
 
+            APFTask.phase(parent,"Parsing")
+            observe.star = Star(starlist_line=line.strip())
+            APFTask.phase(parent,"New_target")
             ndone = ndone + 1
             APFTask.step(parent,ndone)
             if observe.fake is False:
@@ -186,15 +200,11 @@ if __name__ == "__main__":
 
             if observe.star.blank is False and gstar is None:
                 # this is not a blank field - there is a star to be observed
-                APFTask.phase(parent,"Acquiring star %s" % (observe.star.name))
+                APFTask.phase(parent,"New_acquire")
                 acquire_success= False
 
-                if observe.fake is False:
-                    observe.setupGuider() # sets guider values to default
-                    observe.setupOffsets() # zero out Az/El offsets
-                    observe.setupRDOffsets(0.0,0.0) # zero out RA/Dec offsets
-                    observe.mode.write('off') # stop guiding for acquisition
-                    APFTask.set(parent,'VMAG',observe.star.vmag) # for autoexposure
+
+                initialize(observe)
 
                 APFTask.phase(parent,"Configuring instrument")
                 observe.configureSpecDefault()
@@ -214,6 +224,7 @@ if __name__ == "__main__":
 
                 # earlier spectrometer moves were nowait moves, spectrometer
                 # should be ready by now
+                APFTask.phase(parent,'Config_start')
                 rv = observe.spectrom.check_states(keylist=['DECKERNAM','IODINENAM'])
                 if rv is False:
                     observe.log("Instrument move failed",level='error',echo=True)
@@ -222,6 +233,7 @@ if __name__ == "__main__":
 
                 # find a star in the pointing star list
                 if observe.star.do:
+                    APFTask.phase(parent,"Point_ref")
                     r, code = observe.acquirePointingRef()
                     if r is False:
                         # one can always hope
@@ -229,7 +241,7 @@ if __name__ == "__main__":
 
                     observe.setupGuider()
                 # slew to star - centerup and autoexposure
-
+                APFTask.phase(parent,"New_acquire")
                 slewstr = 'slew --targname %s -r %s -d %s --pm-ra-arc %s --pm-dec-arc %s' % (observe.star.name,observe.star.sra, observe.star.sdec, observe.star.pmra, observe.star.pmdec)
                 if observe.fake:
                     observe.log("Would have executed %s" % (slewstr),echo=True)
@@ -240,7 +252,7 @@ if __name__ == "__main__":
                 observe.spectrom.adctrack()
                 # waitfor ?
 
-                APFTask.phase(parent,"Autoexposure")
+                APFTask.phase(parent,"Exposure_adjust")
                 if observe.fake:
                     observe.log("Would have executed %s" % ('autoexposure'),echo=True)
                     r=True
@@ -251,7 +263,7 @@ if __name__ == "__main__":
                     APFTask.set(parent,'line_result','Failed')
                     continue
 
-                APFTask.phase(parent,"Centering")
+                APFTask.phase(parent,"Target_center")
                 r, code = CmdExec.operExec('centerup',observe.checkapf,fake=observe.fake)
                 if r is False:
                     APFTask.set(parent,'line_result','Failed')
@@ -277,6 +289,7 @@ if __name__ == "__main__":
                 else:
                     gstar = None
                     if observe.star.count > 0 :
+                        APFTask.phase(parent,"Observing")
                         observe.takeExposures()
 
                 observe.updateRoboState()
@@ -337,6 +350,7 @@ if __name__ == "__main__":
                     if observe.fake:
                         apflog("Would have taken %d exposures" % (observe.star.count),echo=True)
                     else:
+                        APFTask.phase(parent,"Observing")
                         if observe.takeExposures():
                             APFTask.set(parent,'line_result','Success')
                             if obs_fp is not None:
@@ -348,6 +362,8 @@ if __name__ == "__main__":
                 observe.updateRoboState()
                 if observe.fake is False:
                     APFTask.set(parent,'line_result','Success')
+            # bottom
+            APFTask.phase(parent,"Input")
 
     if obs_fp is not None:
         obs_fp.close()
