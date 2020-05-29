@@ -361,8 +361,8 @@ if __name__ == "__main__":
                             if obs_fp is not None:
                                 obs_fp.write(observe.star.line + "\n")
                         observe.mode.write('Off')
-                    gstar = None
-                    guidepos.star = None
+                gstar = None
+                guidepos.star = None
 
                 observe.updateRoboState()
                 if observe.fake is False:
