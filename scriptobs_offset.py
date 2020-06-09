@@ -340,6 +340,8 @@ if __name__ == "__main__":
 
                 if observe.star.blank:
                     gstar = None
+                    observe.gexptime.write(5,binary=True)
+                    observe.sumframe.write(6,binary=True)
                 else:
                     guidepos.star = gstar
                     guiderad = 30
