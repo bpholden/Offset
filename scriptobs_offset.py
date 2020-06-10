@@ -86,7 +86,7 @@ def parseArgs():
 
     parser = argparse.ArgumentParser(description="Set default options")
     parser.add_argument('--test', action='store_true', help="Starts in test mode. No modification to telescope, instrument, or observer settings will be made.")
-    parser.add_argument('-f', '--file', default=None, help="Starts in test mode. No modification to telescope, instrument, or observer settings will be made.")
+    parser.add_argument('-f', '--file', default=None, help="Filename for input target list instead of using stdin.")
     parser.add_argument('-t', '--tdir', default='.', help="Output directory for target list")
     opt = parser.parse_args()
     return opt
@@ -126,7 +126,7 @@ if __name__ == "__main__":
         parent = 'scriptobs'
 
     if opt.file:
-        if os.path.exists(opt.file):
+        if os.path.exists(os.path.join(opt.tdir,opt.file)):
             fp = open(opt.file)
         else:
             print("File %s does not exist" % (opt.file))
