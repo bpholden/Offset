@@ -86,6 +86,7 @@ def parseArgs():
 
     parser = argparse.ArgumentParser(description="Set default options")
     parser.add_argument('--test', action='store_true', help="Starts in test mode. No modification to telescope, instrument, or observer settings will be made.")
+    parser.add_argument('--norecord', action='store_true', help="Starts in test mode. ")
     parser.add_argument('-f', '--file', default=None, help="Filename for input target list instead of using stdin.")
     parser.add_argument('-t', '--tdir', default='.', help="Output directory for target list")
     opt = parser.parse_args()
@@ -172,6 +173,8 @@ if __name__ == "__main__":
     observe = Observe(parent=parent,fake=opt.test)
     origowner = observe.origowner
     observe.record='yes'
+    if opt.norecord:
+        observe.record='no'
 
     guidepos = GuidePos()
 
@@ -337,7 +340,7 @@ if __name__ == "__main__":
                     slewstr = 'slew --targname %s -r %s -d %s --pm-ra-arc %s --pm-dec-arc %s' % (observe.star.name,observe.star.sra, observe.star.sdec, observe.star.pmra, observe.star.pmdec)
                     CmdExec.operExec(slewstr,observe.checkapf,fake=observe.fake)
                 # set the ADC to tracking
-                observe.log("Setting ADC Mode to Track",echo=True)  
+                observe.log("Setting ADC Mode to Track",echo=True)
                 observe.spectrom.adctrack()
 
                 if observe.star.blank:
