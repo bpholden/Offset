@@ -19,6 +19,7 @@ import numpy as np
 
 sys.path.append("/home/holden/src")
 import apflog
+import Guider
 
 import WCS
 import Star
@@ -46,6 +47,7 @@ class Observe:
 
         self.eostele = ktl.Service('eostele')
 
+
         self.apfguide = ktl.Service('apfguide')
         self.guidex = self.apfguide['GUIDEX']
         self.guidey = self.apfguide['GUIDEY']
@@ -56,10 +58,8 @@ class Observe:
         self.maxradius = self.apfguide['MAXRADIUS']
         self.maxradius.write(210,binary=True)
 
-        self.eosgcam = ktl.Service('eosgcam')
-        self.gexptime = self.eosgcam['gexptime']
-        self.sumframe = self.eosgcam['sumframe']
-        self.gain = self.eosgcam['gcgain']
+        self.guider = Guider.Guider()
+
 
         self.zps = APFTask.get("scriptobs",["AZZPT","ELZPT"])
 
@@ -140,14 +140,16 @@ class Observe:
         """
 
         self.maxradius.write(210,binary=True)
+        self.guider.set_gain(2)
         if self.gexptime.read(binary=True) < 1:
-            writeem(self.eosgcam,'gexptime',1,binary=True,wait=True)
-            writeem(self.eosgcam,'sumframe',1,binary=True,wait=True)
+            self.guider.set_time(1.0)
+            self.guider.set_sumframe(1)
         else:
-            writeem(self.eosgcam,'gexptime',1,binary=True,wait=True)
-            writeem(self.eosgcam,'sumframe',1,binary=True,wait=True)
+            self.guider.set_sumframe(1)
+            self.guider.set_time(1.0)
 
-        writeem(self.eosgcam,'gcgain',2,binary=True)
+
+
 
     def setupOffsets(self):
         """
