@@ -249,6 +249,7 @@ if __name__ == "__main__":
                     CmdExec.operExec(slewstr,observe.checkapf,fake=observe.fake)
 
                 # set the ADC to tracking
+                observe.log("Setting ADC Mode to Track",echo=True)
                 observe.spectrom.adctrack()
                 # waitfor ?
 
@@ -336,6 +337,7 @@ if __name__ == "__main__":
                     slewstr = 'slew --targname %s -r %s -d %s --pm-ra-arc %s --pm-dec-arc %s' % (observe.star.name,observe.star.sra, observe.star.sdec, observe.star.pmra, observe.star.pmdec)
                     CmdExec.operExec(slewstr,observe.checkapf,fake=observe.fake)
                 # set the ADC to tracking
+                observe.log("Setting ADC Mode to Track",echo=True)  
                 observe.spectrom.adctrack()
 
                 if observe.star.blank:
