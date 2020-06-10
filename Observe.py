@@ -141,13 +141,13 @@ class Observe:
 
         self.maxradius.write(210,binary=True)
         if self.gexptime.read(binary=True) < 1:
-            self.gexptime.write(1,binary=True)
-            self.sumframe.write(1,binary=True)
+            writeem(self.eosgcam,'gexptime',1,binary=True,wait=True)
+            writeem(self.eosgcam,'sumframe',1,binary=True,wait=True)
         else:
-            self.sumframe.write(1,binary=True)
-            self.gexptime.write(1,binary=True)
+            writeem(self.eosgcam,'gexptime',1,binary=True,wait=True)
+            writeem(self.eosgcam,'sumframe',1,binary=True,wait=True)
 
-        self.gain.write(2,binary=True)
+        writeem(self.eosgcam,'gcgain',2,binary=True)
 
     def setupOffsets(self):
         """
