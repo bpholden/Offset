@@ -86,7 +86,7 @@ def parseArgs():
 
     parser = argparse.ArgumentParser(description="Set default options")
     parser.add_argument('--test', action='store_true', help="Starts in test mode. No modification to telescope, instrument, or observer settings will be made.")
-    parser.add_argument('--norecord', action='store_true', help="Starts in test mode. ")
+    parser.add_argument('--norecord', action='store_true', help="Does not save spectra.")
     parser.add_argument('-f', '--file', default=None, help="Filename for input target list instead of using stdin.")
     parser.add_argument('-t', '--tdir', default='.', help="Output directory for target list")
     opt = parser.parse_args()
