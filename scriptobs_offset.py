@@ -273,7 +273,7 @@ if __name__ == "__main__":
                     APFTask.set(parent,'line_result','Failed')
                     continue
 
-                if observe.gexptime.read(binary=True) <= 1.0:
+                if observe.guider.gexptime.read(binary=True) <= 1.0:
                     r = focusTel(observe)
                     if r is False:
                         APFTask.set(parent,'line_result','Failed')
