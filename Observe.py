@@ -141,7 +141,7 @@ class Observe:
 
         self.maxradius.write(210,binary=True)
         self.guider.set_gain(2)
-        if self.gexptime.read(binary=True) < 1:
+        if self.guider.gexptime.read(binary=True) < 1:
             self.guider.set_time(1.0)
             self.guider.set_sumframe(1)
         else:
@@ -412,7 +412,7 @@ class Observe:
 
 
     def shouldFocus(self):
-        if self.gexptime <= 1:
+        if self.guider.gexptime.read(binary=True) <= 1:
             return True
         else:
             return False
