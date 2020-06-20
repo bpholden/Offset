@@ -97,6 +97,8 @@ def focusTel(observe):
     autofoc = ktl.read('apftask','SCRIPTOBS_AUTOFOC',timeout=2)
     if observe.star.foc > 0 or autofoc == "robot_autofocus_enable":
         APFTask.phase(parent,"Check/Measure_focus")
+        if observe.fake is False:
+            observe.mode.write('off')
         if observe.star.foc == 2:
             r, code = CmdExec.operExec('focus_telescope --force',observe.checkapf,fake=observe.fake)
         else:
@@ -272,6 +274,9 @@ if __name__ == "__main__":
                 if r is False:
                     APFTask.set(parent,'line_result','Failed')
                     continue
+
+                if observe.fake is False:
+                    observe.mode.write('guide')
 
                 if observe.guider.gexptime.read(binary=True) <= 1.0:
                     r = focusTel(observe)
