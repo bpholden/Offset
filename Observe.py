@@ -101,7 +101,7 @@ class Observe:
         if dmtime['populated'] == False:
             return
         try:
-            if float(dmtime) < 300.:
+            if float(dmtime['binary']) < 1140.:
                 self.updateRoboState()
         except Exception, e:
             self.log("Exception in dmtimemon: %s" % (e), level='error')
