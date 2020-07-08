@@ -125,6 +125,9 @@ class Star:
         if 'count' in fields_dict.keys():
             self.count = int_or_default(fields_dict['count'])
 
+        if 'expcount' in fields_dict.keys():
+            self.expcount = float_or_default(fields_dict['count'],1e9)
+
         if 'foc' in fields_dict.keys():
             self.foc = int_or_default(fields_dict['foc'])
 
