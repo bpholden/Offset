@@ -141,7 +141,7 @@ if __name__ == "__main__":
     if os.path.exists(opt.tdir):
         obs_fn = os.path.join(opt.tdir,'observed_targets')
         try:
-            obs_fp = open(obs_fn,"w+")
+            obs_fp = open(obs_fn,"a+")
         except:
             print("Cannot open %s" % (obs_fn))
 
