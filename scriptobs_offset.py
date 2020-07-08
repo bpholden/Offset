@@ -299,6 +299,7 @@ if __name__ == "__main__":
                     gstar = None
                     if observe.star.count > 0 :
                         APFTask.phase(parent,"Observing")
+                        apflog("Will have take %d exposures" % (observe.star.count),echo=True)
                         observe.takeExposures()
 
                 observe.updateRoboState()
@@ -368,6 +369,7 @@ if __name__ == "__main__":
                         apflog("Would have taken %d exposures" % (observe.star.count),echo=True)
                     else:
                         APFTask.phase(parent,"Observing")
+                        apflog("Will have take %d exposures" % (observe.star.count),echo=True)
                         if observe.takeExposures():
                             APFTask.set(parent,'line_result','Success')
                             if obs_fp is not None:
