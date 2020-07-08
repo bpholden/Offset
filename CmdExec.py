@@ -11,14 +11,14 @@ def cmdexec(cmd, cwd='./',fake=False,debug=False):
     if fake:
         apflog("Would have executed: %s" % repr(cmd), echo=True)
         return True, 0
-    
+
     apflog("Executing Command: %s" % repr(cmd), echo=True)
-    
+
     p = subprocess.Popen(args, stdout=subprocess.PIPE,stderr=subprocess.PIPE,cwd=cwd)
-    
+
     while p.poll() is None:
         l = p.stdout.readline().rstrip('\n')
-        if debug: apflog(l, echo=debug)
+        apflog(l, echo=debug)
 
     out, err = p.communicate()
     if debug: apflog(out, echo=debug)
