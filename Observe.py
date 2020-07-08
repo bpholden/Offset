@@ -252,7 +252,7 @@ class Observe:
             self.message("Disabling exposure meter for blank field")
         else:
             ktl.write('apfguide','xpose_enable','true')
-
+            ktl.write('apfguide','xpose_thresh',self.star.expcount)
 
         # check ucam status
         combo_ps = spectraexp.comb.read(binary=True)
