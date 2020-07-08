@@ -49,6 +49,7 @@ class Star:
         self.tottime = 0
         self.decker="W"
         self.count=0
+        self.expcount=1e9
         self.foc=0
         self.owner='public'
         self.lamp='none'
