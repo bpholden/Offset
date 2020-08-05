@@ -307,6 +307,7 @@ if __name__ == "__main__":
                 if observe.fake is False:
                     if obs_fp is not None:
                         obs_fp.write(observe.star.line + "\n")
+                        obs_fp.flush()
                     APFTask.set(parent,'line_result','Success')
 
             elif gstar is not None or observe.star.blank:
@@ -375,6 +376,7 @@ if __name__ == "__main__":
                             APFTask.set(parent,'line_result','Success')
                             if obs_fp is not None:
                                 obs_fp.write(observe.star.line + "\n")
+                                obs_fp.flush()
                         observe.mode.write('Off')
                 gstar = None
                 guidepos.star = None
