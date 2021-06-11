@@ -353,8 +353,11 @@ if __name__ == "__main__":
 
                 if observe.star.blank:
                     gstar = None
-                    observe.guider.set_time(5.0)
-                    observe.guider.set_sumframe(6)
+                     if observe.fake:
+                        apflog('Would write eosgcam.GEXPTIME=5.000 eosgcam.SUMFRAME=6',echo=True)
+                    else:
+                        observe.guider.set_time(5.0)
+                        observe.guider.set_sumframe(6)
                 else:
                     guidepos.star = gstar
                     guiderad = 30
