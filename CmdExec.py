@@ -32,7 +32,9 @@ def cmdexec(cmd, cwd='./',fake=False,debug=False):
 def operExec(instr,checkapf,fake=False):
 
     if fake:
-        pass
+        apflog("Would have executed %s" % (instr),echo=True)
+        r=True
+        code=None
     else:
         writeem(checkapf,'ROBOSTATE','offset_blind operating')
         r,code = cmdexec(instr)
