@@ -244,8 +244,8 @@ if __name__ == "__main__":
                     if r is False:
                         # one can always hope
                         observe.log("Pointing star acquisition failed, continuing", level='error', echo=True)
-
                     observe.setupGuider()
+                    
                 # slew to star - centerup and autoexposure
                 APFTask.phase(parent,"New_acquire")
                 slewstr = 'slew --targname %s -r %s -d %s --pm-ra-arc %s --pm-dec-arc %s' % (observe.star.name,observe.star.sra, observe.star.sdec, observe.star.pmra, observe.star.pmdec)
