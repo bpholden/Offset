@@ -353,7 +353,7 @@ if __name__ == "__main__":
 
                 if observe.star.blank:
                     gstar = None
-                     if observe.fake:
+                    if observe.fake:
                         apflog('Would write eosgcam.GEXPTIME=5.000 eosgcam.SUMFRAME=6',echo=True)
                     else:
                         observe.guider.set_time(5.0)
