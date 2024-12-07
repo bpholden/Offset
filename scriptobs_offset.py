@@ -53,7 +53,8 @@ def shutdown():
         pass
 
     try:
-        if ktl.read('checkapf','instr_perm',binary=True) and ktl.read('checkapf','instrele',binary=True) == 1:
+        if ktl.read('checkapf','instr_perm',binary=True) \
+            and ktl.read('checkapf','instrele',binary=True) == 1:
             ktl.write('apfmot','adcmod','Track',timeout=0)
     except:
         pass
@@ -71,7 +72,7 @@ def shutdown():
 
     return
 
-def signalShutdown(signal,frame):
+def signal_shutdown(signal,frame):
 
     open_ok = ktl.read('checkapf','open_ok',timeout=0)
     move_perm = ktl.read('checkapf','move_perm',timeout=0)
@@ -81,8 +82,9 @@ def signalShutdown(signal,frame):
 
     shutdown()
 
-def parseArgs():
-
+def parse_args():
+    '''
+    Parse command line arguments'''
 
     parser = argparse.ArgumentParser(description="Set default options")
     parser.add_argument('--test', action='store_true', help="Starts in test mode. No modification to telescope, instrument, or observer settings will be made.")
@@ -93,37 +95,43 @@ def parseArgs():
     opt = parser.parse_args()
     return opt
 
-def focusTel(observe):
+def focus_tel(observe):
+    '''
+    Focus the telescope
+    '''
+
     r = False
     autofoc = ktl.read('apftask','SCRIPTOBS_AUTOFOC',timeout=2)
     if observe.star.foc > 0 or autofoc == "robot_autofocus_enable":
-        APFTask.phase(parent,"Check/Measure_focus")
+        APFTask.phase(observe.parent,"Check/Measure_focus")
         if observe.fake is False:
             observe.mode.write('off')
         if observe.star.foc == 2:
-            r, code = CmdExec.operExec('focus_telescope --force',observe.checkapf,fake=observe.fake)
+            r, _ = CmdExec.operExec('focus_telescope --force',observe.checkapf,fake=observe.fake)
         else:
-            r, code = CmdExec.operExec('focus_telescope ',observe.checkapf,fake=observe.fake)
+            r, _ = CmdExec.operExec('focus_telescope ',observe.checkapf,fake=observe.fake)
         if r is False:
             return r
-    APFTask.phase(parent,"Focus_re-center")
-    r, code = CmdExec.operExec('centerwait',observe.checkapf,fake=observe.fake)
+    APFTask.phase(observe.parent,"Focus_re-center")
+    r, _ = CmdExec.operExec('centerwait',observe.checkapf,fake=observe.fake)
     return r
 
 def initialize(observe):
+    '''
+    Initialize the telescope and instrument for a new target'''
     if observe.fake:
         return
     observe.setupGuider() # sets guider values to default
     observe.setupOffsets() # zero out Az/El offsets
     observe.setupRDOffsets(0.0,0.0) # zero out RA/Dec offsets
     observe.mode.write('off') # stop guiding for acquisition
-    APFTask.set(parent,'VMAG',observe.star.vmag) # for autoexposure
+    APFTask.set(observe.parent,'VMAG',observe.star.vmag) # for autoexposure
 
 
 def main():
 
 
-    opt = parseArgs()
+    opt = parse_args()
     parent = "scriptobs"
     if opt.test:
         parent='example'
@@ -150,8 +158,8 @@ def main():
     # should exit on most
 
     atexit.register(shutdown)
-    signal.signal(signal.SIGINT,  signalShutdown)
-    signal.signal(signal.SIGTERM, signalShutdown)
+    signal.signal(signal.SIGINT,  signal_shutdown)
+    signal.signal(signal.SIGTERM, signal_shutdown)
 
     # task setup
 
@@ -173,7 +181,6 @@ def main():
     # star on the slit or off
 
     observe = Observe(parent=parent,fake=opt.test)
-    origowner = observe.origowner
     observe.record='yes'
     if opt.norecord:
         observe.record='no'
@@ -189,7 +196,7 @@ def main():
     guidepos.start()
 
     APFTask.phase(parent,"prep-obs")
-    r, code = CmdExec.operExec("prep-obs",observe.checkapf,fake=observe.fake)
+    r, _ = CmdExec.operExec("prep-obs",observe.checkapf,fake=observe.fake)
     APFTask.phase(parent,"Input")
     with fp as txt:
         for line in txt:
@@ -279,7 +286,7 @@ def main():
                     observe.mode.write('guide')
 
                 if observe.guider.gexptime.read(binary=True) <= 1.0:
-                    r = focusTel(observe)
+                    r = focus_tel(observe)
                     if r is False:
                         APFTask.set(parent,'line_result','Failed')
                         continue
