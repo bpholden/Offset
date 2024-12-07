@@ -124,10 +124,9 @@ if __name__ == "__main__":
 
 
     opt = parseArgs()
+    parent = "scriptobs"
     if opt.test:
         parent='example'
-    else:
-        parent = 'scriptobs'
 
     if opt.file:
         if os.path.exists(os.path.join(opt.tdir,opt.file)):
