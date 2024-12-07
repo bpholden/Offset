@@ -120,7 +120,7 @@ def initialize(observe):
     APFTask.set(parent,'VMAG',observe.star.vmag) # for autoexposure
 
 
-if __name__ == "__main__":
+def main():
 
 
     opt = parseArgs()
@@ -317,7 +317,6 @@ if __name__ == "__main__":
                 if observe.fake is False:
                     observe.mode.write('off')
 
-
                 writeem(observe.eostele,'targname',observe.star.name)
 
                 if observe.star.blank:
@@ -393,3 +392,6 @@ if __name__ == "__main__":
         obs_fp.close()
     success = True
     sys.exit('Done')
+
+if __name__ == "__main__":
+    main()
